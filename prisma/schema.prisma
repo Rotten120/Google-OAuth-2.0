@@ -13,3 +13,36 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id        String        @id @default(uuid())
+  email     String        @unique
+  name      String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  oauthAccounts   OAuthAccount[]
+
+  @@index([email])
+  @@map("user")
+}
+
+model OAuthAccount {
+  id        String        @id @default(uuid())
+  userId    String
+  provider        String
+  providerUserId  String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  // Cascade means if user gets deleted, the OAuthAccounts that has the user's Id are also deleted 
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // prevents same google acc creating multiple users
+  @@unique([provider, providerUserId])
+
+  // prevents one user from linking the same provider twice
+  @@unique([userId, provider])
+  @@index([userId])
+  @@map("oauthacc")
+}
