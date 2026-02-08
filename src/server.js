@@ -1,5 +1,7 @@
 import express from 'express';
-import authRoutes from "./api/authRoutes.js" 
+import authRoutes from "./api/authRoutes.js"
+import userRoutes from "./api/userRoutes.js"
+import { authMiddleware } from "./middleware/authMiddleware.js"
 import cookieParser from "cookie-parser"
 
 const app = express();
@@ -14,5 +16,6 @@ app.get('/', (req, res) => {
 });
 
 app.use("/auth", authRoutes);
+app.use("/user", authMiddleware, userRoutes);
 
 app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));

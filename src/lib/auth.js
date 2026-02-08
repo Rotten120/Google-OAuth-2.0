@@ -12,3 +12,7 @@ export const verifyPassword = async (password, hashedPassword) => {
 export const generateToken = async (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
 }
+
+export const verifyToken = async (token, callback = null) => {
+  return jwt.verify(token, process.env.JWT_SECRET, callback);
+}
