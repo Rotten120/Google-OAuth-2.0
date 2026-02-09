@@ -2,7 +2,7 @@ import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 
 export const hashPassword = async (password) => {
-  return bcrypt.hash(password, 8); 
+  return bcrypt.hash(password, Number(process.env.COST)); 
 }
 
 export const verifyPassword = async (password, hashedPassword) => {

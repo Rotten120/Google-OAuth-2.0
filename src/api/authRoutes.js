@@ -2,7 +2,8 @@ import express from "express"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 import { prisma } from "../lib/prismaClient.js"
-import { hashPassword, generateToken, verifyPassword } from "../lib/auth.js"
+import { hashPassword, verifyPassword } from "../lib/auth.js"
+import { setCookie } from "../lib/cookies.js"
 
 const router = express.Router();
 
@@ -25,18 +26,11 @@ router.post('/register', async (req, res) => {
       data: {email, name, password: hashedPassword} 
     });
 
-    const token = await generateToken(id);
-
-    res.cookie("token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60*60*24*7
-      }
-    );
+    const token = await setCookie(res, id);
 
     res.status(201).send({ token })
   } catch(error) {
+    console.log(error);
     res.status(500).send({message: "Error has been found"});
   }
 });
@@ -54,23 +48,21 @@ router.post("/login", async (req, res) => {
       return res.status(409).json({message: "Email or password is incorrect. Please try again"});
     }
 
-    const isVerified = await verifyPassword(password, userDB.password);
+    const userPassword = userDB?.password;
+    if(!userPassword) {
+      return res.status(409).json({message: "Account was made with OAuth. Plase login with your provider"})
+    }
+
+    const isVerified = await verifyPassword(password, userPassword);
     if(!isVerified) {
       return res.status(409).json({message: "Email or password is incorrect. Please try again"})
     }
 
-    const token = await generateToken(userDB.id);
-
-    res.cookie("token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60*60*24*7
-      }
-    );
+    const token = await setCookie(res, userDB.id)
 
     res.status(201).send({ token });
   } catch(error) {
+    console.log(error);
     res.status(500).send({message: "Error has been found"});
   } 
 });
